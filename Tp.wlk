@@ -11,21 +11,33 @@ class Persona {
 }
 
 class Atraccion{
-	var categoria
+	const tipoAtraccion
+		
+	method puedeIngresar(persona) = tipoAtraccion.puedeIngresar(persona)
+	
+	method tipoAtraccion() = tipoAtraccion
+}
+
+class AtraccionGeneral{
+	const categoria
 		
 	method puedeIngresar(persona) = true
 	
 	method categoria() = categoria
 }
 
-class AtraccionVertigo inherits Atraccion{
-	var alturaMinima
+class AtraccionVertigo{
+	const alturaMinima
 	
-	override method puedeIngresar(persona) = persona.altura() > alturaMinima
+	method puedeIngresar(persona) = persona.altura() > alturaMinima
+	
+	method categoria() = "vertigo"
 }
 
-class AtraccionInfantil inherits Atraccion{
-	override method puedeIngresar(persona) = persona.esInfante() || persona.esPadre()
+class AtraccionInfantil{
+	method categoria() = "infantil"
+	
+	method puedeIngresar(persona) = persona.esInfante() || persona.esPadre()
 }
 
 class Entrada{
@@ -46,7 +58,7 @@ class PaseFull{
 
 class PasePromo inherits PaseFull{
 	override method permiteIngresar(atracionDeseada) =
-		atracionDeseada.categoria() == "infantil" || atracionDeseada.categoria() == "show"
+		atracionDeseada.tipoAtraccion().categoria() == "infantil" || atracionDeseada.tipoAtraccion().categoria() == "show"
 }
 
 class PaseOro inherits PaseFull{
@@ -78,14 +90,15 @@ class PersonaTemerosa inherits PersonaTemeraria {
     }
 }
 
+
 /* objetos para test */
 object infante inherits Persona(edad = 11, altura = 102, hijosACargo = []){}
 object padre inherits Persona(edad = 30, altura = 182, hijosACargo = [infante]){}
 object otro inherits Persona(edad = 26, altura = 178, hijosACargo = []){}
 
-object montaniaRusa inherits AtraccionVertigo(categoria="vertigo", alturaMinima=110){}
-object tazasGiratorias inherits AtraccionInfantil(categoria="infantil"){}
-object recital inherits Atraccion(categoria="show"){}
+object montaniaRusa inherits Atraccion(tipoAtraccion = new AtraccionVertigo(alturaMinima=110)){}
+object tazasGiratorias inherits Atraccion(tipoAtraccion = new AtraccionInfantil()){}
+object recital inherits Atraccion(tipoAtraccion=new AtraccionGeneral(categoria = "show")){}
 
 object entradaRecital inherits Entrada(atracion = recital){}
 object entradaMontaniaRusa inherits Entrada(atracion = montaniaRusa){}
