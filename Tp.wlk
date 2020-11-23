@@ -2,47 +2,55 @@ class Persona {
 	var edad
 	var altura
 	var hijosACargo
+	var pase
+	var entradas
 	
 	method altura() = altura
 	
 	method esInfante() = edad < 12
 	
 	method esPadre() = hijosACargo.any({hijo => hijo.esInfante()})
+	
+	method calcularCosto(){
+		var costo = 0
+		if(!self.esInfante()){
+			costo += pase.costo()
+			entradas.forEach({entrada => costo += entrada.costo()})
+			costo += costo / 2
+		}
+		if(self.esPadre()){
+			hijosACargo.forEach({hijo => costo += hijo.calcularCosto()})
+		}
+		return costo
+	}
 }
 
 class Atraccion{
-	const tipoAtraccion
-		
-	method puedeIngresar(persona) = tipoAtraccion.puedeIngresar(persona)
-	
-	method tipoAtraccion() = tipoAtraccion
-}
-
-class AtraccionGeneral{
 	const categoria
+	var costo
 		
 	method puedeIngresar(persona) = true
 	
 	method categoria() = categoria
+	
+	method costo() = costo
 }
 
-class AtraccionVertigo{
+class AtraccionVertigo inherits Atraccion{
 	const alturaMinima
 	
-	method puedeIngresar(persona) = persona.altura() > alturaMinima
-	
-	method categoria() = "vertigo"
+	override method puedeIngresar(persona) = persona.altura() > alturaMinima
 }
 
-class AtraccionInfantil{
-	method categoria() = "infantil"
-	
-	method puedeIngresar(persona) = persona.esInfante() || persona.esPadre()
+class AtraccionInfantil inherits Atraccion{	
+	override method puedeIngresar(persona) = persona.esInfante() || persona.esPadre()
 }
 
 class Entrada{
 	var atracion
 	var noSeUso = true
+	
+	method costo() = atracion.costo()
 	
 	method permiteIngresar(atracionDeseada){
 		if(atracionDeseada == atracion && noSeUso){
@@ -54,11 +62,15 @@ class Entrada{
 
 class PaseFull{
 	method permiteIngresar(atracionDeseada) = true
+	
+	method precio() = 600
 }
 
 class PasePromo inherits PaseFull{
 	override method permiteIngresar(atracionDeseada) =
-		atracionDeseada.tipoAtraccion().categoria() == "infantil" || atracionDeseada.tipoAtraccion().categoria() == "show"
+		atracionDeseada.categoria() == "infantil" || atracionDeseada.categoria() == "show"
+		
+	override method precio() = 200
 }
 
 class PaseOro inherits PaseFull{
@@ -66,6 +78,12 @@ class PaseOro inherits PaseFull{
 	
 	override method permiteIngresar(atracionDeseada) =
 		atraccionesPermitidas.any({atracion => atracion == atracionDeseada})
+		
+	override method precio(){
+		var acumulado = 0
+		atraccionesPermitidas.forEach({atracion => acumulado += atracion.costo()})
+		return acumulado / 2
+	} 
 }
 
 /*
@@ -93,12 +111,12 @@ class PersonaTemerosa inherits PersonaTemeraria {
 
 /* objetos para test */
 object infante inherits Persona(edad = 11, altura = 102, hijosACargo = []){}
-object padre inherits Persona(edad = 30, altura = 182, hijosACargo = [infante]){}
+object padre inherits Persona(edad = 30, altura = 182, hijosACargo = [infante, otro]){}
 object otro inherits Persona(edad = 26, altura = 178, hijosACargo = []){}
 
-object montaniaRusa inherits Atraccion(tipoAtraccion = new AtraccionVertigo(alturaMinima=110)){}
-object tazasGiratorias inherits Atraccion(tipoAtraccion = new AtraccionInfantil()){}
-object recital inherits Atraccion(tipoAtraccion=new AtraccionGeneral(categoria = "show")){}
+object montaniaRusa inherits AtraccionVertigo(categoria="vertigo",alturaMinima=110){}
+object tazasGiratorias inherits AtraccionInfantil(categoria="infantil"){}
+object recital inherits Atraccion(categoria="show"){}
 
 object entradaRecital inherits Entrada(atracion = recital){}
 object entradaMontaniaRusa inherits Entrada(atracion = montaniaRusa){}
