@@ -40,20 +40,20 @@ class AtraccionInfantil{
 	method puedeIngresar(persona) = persona.esInfante() || persona.esPadre()
 }
 
-class Entrada{
+class PaseFull{
+	method permiteIngresar(atracionDeseada) = true
+}
+
+class Entrada inherits PaseFull{
 	var atracion
 	var noSeUso = true
 	
-	method permiteIngresar(atracionDeseada){
+	override method permiteIngresar(atracionDeseada){
 		if(atracionDeseada == atracion && noSeUso){
 			noSeUso = false
 			return true
 		} else return false
 	}
-}
-
-class PaseFull{
-	method permiteIngresar(atracionDeseada) = true
 }
 
 class PasePromo inherits PaseFull{
