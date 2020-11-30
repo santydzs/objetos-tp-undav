@@ -2,20 +2,13 @@ class Persona {
 	var edad
 	var altura
 	var hijosACargo
+	var adrenalina
 	
 	method altura() = altura
 	
 	method esInfante() = edad < 12
 	
 	method esPadre() = hijosACargo.any({hijo => hijo.esInfante()})
-}
-
-class Atraccion{
-	const tipoAtraccion
-		
-	method puedeIngresar(persona) = tipoAtraccion.puedeIngresar(persona)
-	
-	method tipoAtraccion() = tipoAtraccion
 }
 
 class AtraccionGeneral{
@@ -26,29 +19,22 @@ class AtraccionGeneral{
 	method categoria() = categoria
 }
 
-class AtraccionVertigo{
+class AtraccionVertigo inherits AtraccionGeneral{
 	const alturaMinima
 	
-	method puedeIngresar(persona) = persona.altura() > alturaMinima
+	override method puedeIngresar(persona) = persona.altura() > alturaMinima
+}
+
+class AtraccionInfantil inherits AtraccionGeneral{
 	
-	method categoria() = "vertigo"
+	override method puedeIngresar(persona) = persona.esInfante() || persona.esPadre()
 }
 
-class AtraccionInfantil{
-	method categoria() = "infantil"
-	
-	method puedeIngresar(persona) = persona.esInfante() || persona.esPadre()
-}
-
-class PaseFull{
-	method permiteIngresar(atracionDeseada) = true
-}
-
-class Entrada inherits PaseFull{
+class Entrada{
 	var atracion
 	var noSeUso = true
 	
-	override method permiteIngresar(atracionDeseada){
+	method permiteIngresar(atracionDeseada){
 		if(atracionDeseada == atracion && noSeUso){
 			noSeUso = false
 			return true
@@ -56,9 +42,13 @@ class Entrada inherits PaseFull{
 	}
 }
 
+class PaseFull{
+	method permiteIngresar(atracionDeseada) = true
+}
+
 class PasePromo inherits PaseFull{
 	override method permiteIngresar(atracionDeseada) =
-		atracionDeseada.tipoAtraccion().categoria() == "infantil" || atracionDeseada.tipoAtraccion().categoria() == "show"
+		atracionDeseada.categoria() == "infantil" || atracionDeseada.categoria() == "show"
 }
 
 class PaseOro inherits PaseFull{
@@ -76,20 +66,17 @@ class PaseOro inherits PaseFull{
  * 5 - el metodo ingresar tambien compartes parte de la implementacion, por lo que una clase podria heredar de otra para simplificar el codigo
  */
 class PersonaTemeraria inherits Persona {
-	var adrenalina
-
     method ingresar(atraccion) {
         adrenalina += 10
     }
 }
-class PersonaTemerosa inherits PersonaTemeraria {
+class PersonaTemerosa inherits Persona {
     var miedo
-    override method ingresar(atraccion) {
-        super(atraccion)
+    method ingresar(atraccion) {
+        adrenalina += 10
         miedo += 20
     }
 }
-
 
 /* objetos para test */
 object infante inherits Persona(edad = 11, altura = 102, hijosACargo = []){}
