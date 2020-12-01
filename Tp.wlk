@@ -3,20 +3,39 @@ class Persona {
 	var altura
 	var hijosACargo
 	var adrenalina
+	var entradas
+	var pase
 	
 	method altura() = altura
 	
 	method esInfante() = edad < 12
 	
 	method esPadre() = hijosACargo.any({hijo => hijo.esInfante()})
+	
+	/* metodo encargado de calcular solo el gasto personal (no tiene en cuenta si tiene hijos)
+	 * en caso de ser infante no tiene gasto personal*/
+	method costoUnitario() {
+		if(!self.esInfante()) return pase.costo() + entradas.sum({entrada => entrada.costo()})
+		else return 0
+	}
+	
+	/* primero se calcula el gasto personal, despues si es padre, se suma el gasto de sus hijos */
+	method gasto(){
+		var costo = self.costoUnitario()
+		if(self.esPadre()) costo += hijosACargo.sum({hijo => hijo.costoUnitario()})
+		return costo
+	}
 }
 
 class AtraccionGeneral{
 	const categoria
+	var costo
 		
 	method puedeIngresar(persona) = true
 	
 	method categoria() = categoria
+	
+	method costo() = costo
 }
 
 class AtraccionVertigo inherits AtraccionGeneral{
@@ -40,19 +59,29 @@ class Entrada{
 			return true
 		} else return false
 	}
+	
+	method costo() = atracion.costo()
 }
 
-class PaseFull{
+class Pase{	
 	method permiteIngresar(atracionDeseada) = true
 }
 
-class PasePromo inherits PaseFull{
+class PaseFull inherits Pase{
+	method costo() = 600
+}
+
+class PasePromo inherits Pase{
+	method costo() = 200
+	
 	override method permiteIngresar(atracionDeseada) =
 		atracionDeseada.categoria() == "infantil" || atracionDeseada.categoria() == "show"
 }
 
-class PaseOro inherits PaseFull{
+class PaseOro inherits Pase{
 	var atraccionesPermitidas
+	
+	method costo() = atraccionesPermitidas.sum({atraccion => atraccion.costo()})
 	
 	override method permiteIngresar(atracionDeseada) =
 		atraccionesPermitidas.any({atracion => atracion == atracionDeseada})
@@ -79,16 +108,17 @@ class PersonaTemerosa inherits Persona {
 }
 
 /* objetos para test */
-object infante inherits Persona(edad = 11, altura = 102, hijosACargo = []){}
-object padre inherits Persona(edad = 30, altura = 182, hijosACargo = [infante]){}
-object otro inherits Persona(edad = 26, altura = 178, hijosACargo = []){}
+const montaniaRusa = new AtraccionVertigo(categoria="Vertigo",costo=30,alturaMinima=130)
+const desorbitados = new AtraccionVertigo(categoria="Vertigo",costo=25,alturaMinima=100)
+const tazasGiratorias = new AtraccionInfantil(categoria="Intantil",costo=5)
+const recital = new AtraccionGeneral(categoria="show",costo=10)
 
-object montaniaRusa inherits Atraccion(tipoAtraccion = new AtraccionVertigo(alturaMinima=110)){}
-object tazasGiratorias inherits Atraccion(tipoAtraccion = new AtraccionInfantil()){}
-object recital inherits Atraccion(tipoAtraccion=new AtraccionGeneral(categoria = "show")){}
+const entradaRecital = new Entrada(atracion = recital)
+const entradaMontaniaRusa = new Entrada(atracion = montaniaRusa)
+const paseFull = new PaseFull()
+const pasePromo = new PasePromo()
+const paseOro = new PaseOro(atraccionesPermitidas= [tazasGiratorias, recital])
 
-object entradaRecital inherits Entrada(atracion = recital){}
-object entradaMontaniaRusa inherits Entrada(atracion = montaniaRusa){}
-object paseFull inherits PaseFull{}
-object pasePromo inherits PasePromo{}
-object paseOro inherits PaseOro(atraccionesPermitidas= [tazasGiratorias, recital]){}
+const infante = new PersonaTemerosa(edad = 11, altura = 102, adrenalina = 10, miedo= 0, hijosACargo=[], entradas=[], pase=null)
+const otro = new PersonaTemeraria(edad = 25, altura = 172, adrenalina = 10, hijosACargo=[], entradas=[entradaRecital], pase=paseFull)
+const padre = new PersonaTemeraria(edad = 35, altura = 182, adrenalina = 10, hijosACargo=[infante, otro], entradas=[], pase=pasePromo)
