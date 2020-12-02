@@ -12,39 +12,39 @@ class Persona {
 	
 	method esPadre() = hijosACargo.any({hijo => hijo.esInfante()})
 	
-	/* metodo encargado de calcular solo el gasto personal (no tiene en cuenta si tiene hijos)
-	 * en caso de ser infante no tiene gasto personal*/
-	method costoUnitario() {
-		if(!self.esInfante()) return pase.costo() + entradas.sum({entrada => entrada.costo()})
-		else return 0
-	}
-	
 	/* primero se calcula el gasto personal, despues si es padre, se suma el gasto de sus hijos */
 	method gasto(){
-		var costo = self.costoUnitario()
-		if(self.esPadre()) costo += hijosACargo.sum({hijo => hijo.costoUnitario()})
-		return costo
+		var costoPersonal = 0
+		if(!self.esInfante()) costoPersonal += pase.costo() + entradas.sum({entrada => entrada.costo()})
+		var costoFinal = costoPersonal
+		if(self.esPadre()) costoFinal += hijosACargo.sum({hijo => hijo.gasto()})
+		return costoFinal
 	}
 }
 
 class AtraccionGeneral{
-	const categoria
-	var costo
+	var property costo
 		
 	method puedeIngresar(persona) = true
 	
-	method categoria() = categoria
-	
-	method costo() = costo
+	method categoria()
+}
+
+class AtraccionShow inherits AtraccionGeneral{
+	override method categoria() = "show"
 }
 
 class AtraccionVertigo inherits AtraccionGeneral{
 	const alturaMinima
 	
+	override method categoria() = "Vertigo"
+	
 	override method puedeIngresar(persona) = persona.altura() > alturaMinima
 }
 
 class AtraccionInfantil inherits AtraccionGeneral{
+	
+	override method categoria() = "infantil"
 	
 	override method puedeIngresar(persona) = persona.esInfante() || persona.esPadre()
 }
@@ -96,22 +96,24 @@ class PaseOro inherits Pase{
  */
 class PersonaTemeraria inherits Persona {
     method ingresar(atraccion) {
-        adrenalina += 10
+        if(atraccion.categoria() == "infantil" || atraccion.categoria() == "show") adrenalina += 10
     }
 }
 class PersonaTemerosa inherits Persona {
     var miedo
     method ingresar(atraccion) {
-        adrenalina += 10
-        miedo += 20
+        if(atraccion.categoria() == "infantil" || atraccion.categoria() == "show") {
+        	adrenalina += 10
+        	miedo += 20
+        }
     }
 }
 
 /* objetos para test */
-const montaniaRusa = new AtraccionVertigo(categoria="Vertigo",costo=30,alturaMinima=130)
-const desorbitados = new AtraccionVertigo(categoria="Vertigo",costo=25,alturaMinima=100)
-const tazasGiratorias = new AtraccionInfantil(categoria="Intantil",costo=5)
-const recital = new AtraccionGeneral(categoria="show",costo=10)
+const montaniaRusa = new AtraccionVertigo(costo=30,alturaMinima=130)
+const desorbitados = new AtraccionVertigo(costo=25,alturaMinima=100)
+const tazasGiratorias = new AtraccionInfantil(costo=5)
+const recital = new AtraccionShow(costo=10)
 
 const entradaRecital = new Entrada(atracion = recital)
 const entradaMontaniaRusa = new Entrada(atracion = montaniaRusa)
